@@ -46,7 +46,9 @@ void setup() {
   sensors.begin();
 
   pinMode(ENCA, INPUT);
+  digitalWrite(ENCA, HIGH);       // turn on pullup resistor
   pinMode(ENCB, INPUT);
+  digitalWrite(ENCB, HIGH);       // turn on pullup resistor
   pinMode(PWM, OUTPUT);
 
   PWMtimer_setup();
@@ -90,27 +92,29 @@ void loop() {
   delay(50);
 
 
-//thsi workx right
+//this works right
 
-  // ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
-  //   pos = pos_i;
-  // }
+  ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+    pos = pos_i;
+  }
 
    // Compute velocity
   long currT = micros();
-  float deltaT = ((float) (currT-prevT))/1.0e6;
-  float velocity = (pos - posPrev)/deltaT;
+  float deltaT = ((float) (currT-prevT));
+  float velocity = ((pos - posPrev)*(1.0e6))/deltaT;
   //Gearbox Correction
   velocity = velocity/19.2;
+
+  //i think the gear band ratio is 1:1.6
 
   posPrev = pos;
   prevT = currT;
 
+  // // Low-pass filter
+  // v1Filt = 0.854*v1Filt + 0.0728*velocity + 0.0728*v1Prev;
+  // v1Prev = velocity;
 
-  // Low-pass filter
-  v1Filt = 0.854*v1Filt + 0.0728*velocity + 0.0728*v1Prev;
-  v1Prev = velocity;
-
+//##############################################################
   //CONTROL ALGORITHM
   float vtarget = 30;
 
@@ -130,6 +134,8 @@ void loop() {
   if(pwr > 150){
     pwr = 150;
   }
+
+//##############################################################
 
   //Motor Outputs
   //dutyCycle = map(pwr,0,40,100,150);//map(u,0,800,100,150);
